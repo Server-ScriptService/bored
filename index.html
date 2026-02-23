@@ -1,1 +1,833 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boredom Arcade</title>
+  <style>
+    :root {
+      --bg-primary: #0a0d14;
+      --bg-panel: #111827;
+      --bg-card: #1a2333;
+      --text-primary: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.25);
+      --good: #34d399;
+      --bad: #f87171;
+      --warning: #fbbf24;
+      --border: #253047;
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
 
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at top, #111b2f 0%, var(--bg-primary) 50%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .AppShell {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .HeroPanel {
+      background: linear-gradient(130deg, #141d2e, #0f172a);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .HeroPanel h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 2vw + 1rem, 2.8rem);
+    }
+
+    .HeroPanel p {
+      margin: 0;
+      color: var(--text-muted);
+      max-width: 65ch;
+      line-height: 1.55;
+    }
+
+    .GameTabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .GameTabButton {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      background: #0e1728;
+      color: var(--text-primary);
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .GameTabButton:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .GameTabButton.IsActive {
+      background: linear-gradient(145deg, #18304a, #102238);
+      border-color: var(--accent);
+      box-shadow: inset 0 0 0 1px var(--accent-soft);
+    }
+
+    .GameArea {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--bg-panel);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .GamePanel {
+      display: none;
+      gap: 18px;
+    }
+
+    .GamePanel.IsVisible {
+      display: grid;
+    }
+
+    .PanelHeader h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .PanelHeader p {
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .StatusRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .Badge {
+      background: #0f1d34;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+    }
+
+    .ActionButton {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #10233d;
+      color: var(--text-primary);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+
+    .ActionButton:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    .GameCard {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-card);
+      padding: 14px;
+    }
+
+    .TicTacToeBoard {
+      width: min(360px, 90vw);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .TicTacToeCell {
+      border: 1px solid #344360;
+      border-radius: 10px;
+      background: #0f1b30;
+      display: grid;
+      place-items: center;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 120ms ease, transform 120ms ease;
+    }
+
+    .TicTacToeCell:hover {
+      transform: scale(1.02);
+      border-color: var(--accent);
+    }
+
+    .TicTacToeCell.IsDisabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .WordScrambleControls {
+      display: grid;
+      gap: 10px;
+      max-width: 680px;
+    }
+
+    .WordDisplay {
+      letter-spacing: 0.28em;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      word-break: break-word;
+      margin: 4px 0;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #0d1628;
+      color: var(--text-primary);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1rem;
+    }
+
+    .HintBox {
+      color: var(--text-muted);
+      font-size: 0.96rem;
+    }
+
+    .MathPrompt {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin: 4px 0 10px;
+      color: var(--warning);
+    }
+
+    .TwoColumn {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .ResultGood {
+      color: var(--good);
+      font-weight: 700;
+    }
+
+    .ResultBad {
+      color: var(--bad);
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 14px;
+      }
+
+      .GameTabs {
+        grid-template-columns: 1fr;
+      }
+
+      .TwoColumn {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="AppShell">
+    <section class="HeroPanel">
+      <h1>Boredom Arcade: 3 Big Games, 1 File</h1>
+      <p>
+        Everything here runs offline in this one HTML file. Switch between the games below and challenge yourself with strategic rounds, brainy puzzles, and speed math.
+      </p>
+    </section>
+
+    <section class="GameTabs" aria-label="Choose a game">
+      <button class="GameTabButton IsActive" data-panel="ticTacToe">Tic-Tac-Toe Duel</button>
+      <button class="GameTabButton" data-panel="wordScramble">Word Scramble Sprint</button>
+      <button class="GameTabButton" data-panel="mathRush">Math Rush 60</button>
+    </section>
+
+    <section class="GameArea">
+      <article class="GamePanel IsVisible" id="ticTacToe">
+        <header class="PanelHeader">
+          <h2>Tic-Tac-Toe Duel (You vs Smart CPU)</h2>
+          <p>Play as <strong>X</strong>. The CPU uses tactical logic: it tries to win, blocks your wins, takes center, and uses corners effectively.</p>
+        </header>
+        <div class="StatusRow">
+          <span class="Badge" id="TicTacToeStatus">Your turn (X)</span>
+          <span class="Badge" id="TicTacToeScore">You 0 • CPU 0 • Draws 0</span>
+          <button class="ActionButton" id="ResetTicTacToeButton">Reset Match</button>
+        </div>
+        <div class="TicTacToeBoard" id="TicTacToeBoard" aria-label="Tic tac toe board"></div>
+      </article>
+
+      <article class="GamePanel" id="wordScramble">
+        <header class="PanelHeader">
+          <h2>Word Scramble Sprint</h2>
+          <p>Unscramble words across categories. Each correct answer adds points and gives a small time bonus. Misses cost score.</p>
+        </header>
+        <div class="TwoColumn">
+          <div class="GameCard WordScrambleControls">
+            <div class="StatusRow">
+              <span class="Badge" id="WordScrambleTimer">Time: 75s</span>
+              <span class="Badge" id="WordScrambleScore">Score: 0</span>
+              <span class="Badge" id="WordScrambleRound">Round: 1</span>
+            </div>
+            <div>Scrambled Word:</div>
+            <div class="WordDisplay" id="ScrambledWordDisplay">loading...</div>
+            <label for="WordGuessInput">Your guess</label>
+            <input id="WordGuessInput" type="text" autocomplete="off" placeholder="Type your guess and hit Enter">
+            <div class="StatusRow">
+              <button class="ActionButton" id="SubmitWordGuessButton">Submit Guess</button>
+              <button class="ActionButton" id="SkipWordButton">Skip (-2)</button>
+              <button class="ActionButton" id="RestartWordGameButton">Restart</button>
+            </div>
+            <div class="HintBox" id="WordHintText">Hint: ...</div>
+            <div id="WordFeedback"></div>
+          </div>
+          <div class="GameCard">
+            <h3>How to Score</h3>
+            <ul>
+              <li>Correct answer: +5 points and +3 seconds</li>
+              <li>Wrong answer: -1 point</li>
+              <li>Skip word: -2 points</li>
+              <li>Reach as many rounds as possible before time ends</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+
+      <article class="GamePanel" id="mathRush">
+        <header class="PanelHeader">
+          <h2>Math Rush 60</h2>
+          <p>Solve arithmetic quickly for 60 seconds. Difficulty scales up as your streak grows.</p>
+        </header>
+        <div class="TwoColumn">
+          <div class="GameCard">
+            <div class="StatusRow">
+              <span class="Badge" id="MathTimer">Time: 60s</span>
+              <span class="Badge" id="MathScore">Score: 0</span>
+              <span class="Badge" id="MathStreak">Streak: 0</span>
+            </div>
+            <div class="MathPrompt" id="MathPromptText">Press Start to begin.</div>
+            <label for="MathAnswerInput">Answer</label>
+            <input id="MathAnswerInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Enter answer">
+            <div class="StatusRow">
+              <button class="ActionButton" id="MathSubmitButton">Submit</button>
+              <button class="ActionButton" id="MathStartButton">Start / Restart</button>
+            </div>
+            <div id="MathFeedback"></div>
+          </div>
+          <div class="GameCard">
+            <h3>Rules</h3>
+            <ul>
+              <li>Correct: +2 points (+1 bonus every 5 streak)</li>
+              <li>Wrong: streak resets</li>
+              <li>Operations include +, -, × and ÷ (clean integer division only)</li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const TIC_TAC_TOE_WIN_LINES = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    const WORD_BANK = [
+      { word: "galaxy", hint: "A vast star system containing billions of stars" },
+      { word: "jungle", hint: "Dense tropical forest" },
+      { word: "pyramid", hint: "Ancient triangular monument" },
+      { word: "volcano", hint: "A mountain that erupts lava" },
+      { word: "treasure", hint: "Valuable hidden loot" },
+      { word: "keyboard", hint: "You type on this" },
+      { word: "lantern", hint: "Portable source of light" },
+      { word: "nebula", hint: "Cloud of gas and dust in space" },
+      { word: "compass", hint: "Navigation tool with directions" },
+      { word: "orchard", hint: "An area planted with fruit trees" },
+      { word: "thunder", hint: "Loud sound after lightning" },
+      { word: "festival", hint: "A large celebratory event" }
+    ];
+
+    class TicTacToeGame {
+      constructor() {
+        this.BoardElement = document.getElementById("TicTacToeBoard");
+        this.StatusElement = document.getElementById("TicTacToeStatus");
+        this.ScoreElement = document.getElementById("TicTacToeScore");
+        this.ResetButton = document.getElementById("ResetTicTacToeButton");
+
+        this.BoardState = Array(9).fill("");
+        this.IsRoundOver = false;
+        this.Score = { player: 0, cpu: 0, draws: 0 };
+
+        this.ResetButton.addEventListener("click", () => this.ResetMatch());
+        this.RenderBoard();
+        this.UpdateStatus("Your turn (X)");
+      }
+
+      RenderBoard() {
+        this.BoardElement.innerHTML = "";
+        this.BoardState.forEach((cellValue, cellIndex) => {
+          const CellButton = document.createElement("button");
+          CellButton.className = `TicTacToeCell ${cellValue || this.IsRoundOver ? "IsDisabled" : ""}`;
+          CellButton.textContent = cellValue;
+          CellButton.disabled = Boolean(cellValue) || this.IsRoundOver;
+          CellButton.addEventListener("click", () => this.PlayPlayerTurn(cellIndex));
+          this.BoardElement.appendChild(CellButton);
+        });
+      }
+
+      PlayPlayerTurn(cellIndex) {
+        if (this.IsRoundOver || this.BoardState[cellIndex]) {
+          return;
+        }
+        this.BoardState[cellIndex] = "X";
+        this.RenderBoard();
+
+        const playerResult = this.EvaluateBoard();
+        if (playerResult) {
+          this.EndRound(playerResult);
+          return;
+        }
+
+        this.UpdateStatus("CPU thinking...");
+        setTimeout(() => {
+          this.PlayCpuTurn();
+        }, 300);
+      }
+
+      PlayCpuTurn() {
+        if (this.IsRoundOver) {
+          return;
+        }
+
+        const bestMove = this.GetCpuMove();
+        if (bestMove !== null) {
+          this.BoardState[bestMove] = "O";
+        }
+        this.RenderBoard();
+
+        const cpuResult = this.EvaluateBoard();
+        if (cpuResult) {
+          this.EndRound(cpuResult);
+          return;
+        }
+
+        this.UpdateStatus("Your turn (X)");
+      }
+
+      GetCpuMove() {
+        const emptyCells = this.GetEmptyCells();
+        for (const possibleMove of emptyCells) {
+          const tempBoard = [...this.BoardState];
+          tempBoard[possibleMove] = "O";
+          if (this.GetWinner(tempBoard) === "O") {
+            return possibleMove;
+          }
+        }
+
+        for (const possibleMove of emptyCells) {
+          const tempBoard = [...this.BoardState];
+          tempBoard[possibleMove] = "X";
+          if (this.GetWinner(tempBoard) === "X") {
+            return possibleMove;
+          }
+        }
+
+        if (this.BoardState[4] === "") {
+          return 4;
+        }
+
+        const cornerMoves = [0, 2, 6, 8].filter((spot) => this.BoardState[spot] === "");
+        if (cornerMoves.length > 0) {
+          return cornerMoves[Math.floor(Math.random() * cornerMoves.length)];
+        }
+
+        return emptyCells.length > 0 ? emptyCells[Math.floor(Math.random() * emptyCells.length)] : null;
+      }
+
+      GetEmptyCells() {
+        const EmptyCells = [];
+        this.BoardState.forEach((value, index) => {
+          if (value === "") {
+            EmptyCells.push(index);
+          }
+        });
+        return EmptyCells;
+      }
+
+      EvaluateBoard() {
+        const winner = this.GetWinner(this.BoardState);
+        if (winner === "X") {
+          return "PLAYER_WIN";
+        }
+        if (winner === "O") {
+          return "CPU_WIN";
+        }
+        if (!this.BoardState.includes("")) {
+          return "DRAW";
+        }
+        return null;
+      }
+
+      GetWinner(boardState) {
+        for (const [a, b, c] of TIC_TAC_TOE_WIN_LINES) {
+          if (boardState[a] && boardState[a] === boardState[b] && boardState[b] === boardState[c]) {
+            return boardState[a];
+          }
+        }
+        return null;
+      }
+
+      EndRound(result) {
+        this.IsRoundOver = true;
+        if (result === "PLAYER_WIN") {
+          this.Score.player += 1;
+          this.UpdateStatus("You win this round! 🎉");
+        } else if (result === "CPU_WIN") {
+          this.Score.cpu += 1;
+          this.UpdateStatus("CPU wins this round!");
+        } else {
+          this.Score.draws += 1;
+          this.UpdateStatus("Round ended in a draw.");
+        }
+        this.UpdateScore();
+        this.RenderBoard();
+
+        setTimeout(() => {
+          this.StartNewRound();
+        }, 1100);
+      }
+
+      StartNewRound() {
+        this.BoardState = Array(9).fill("");
+        this.IsRoundOver = false;
+        this.UpdateStatus("Your turn (X)");
+        this.RenderBoard();
+      }
+
+      ResetMatch() {
+        this.Score = { player: 0, cpu: 0, draws: 0 };
+        this.UpdateScore();
+        this.StartNewRound();
+      }
+
+      UpdateStatus(text) {
+        this.StatusElement.textContent = text;
+      }
+
+      UpdateScore() {
+        this.ScoreElement.textContent = `You ${this.Score.player} • CPU ${this.Score.cpu} • Draws ${this.Score.draws}`;
+      }
+    }
+
+    class WordScrambleGame {
+      constructor() {
+        this.TimerElement = document.getElementById("WordScrambleTimer");
+        this.ScoreElement = document.getElementById("WordScrambleScore");
+        this.RoundElement = document.getElementById("WordScrambleRound");
+        this.WordElement = document.getElementById("ScrambledWordDisplay");
+        this.HintElement = document.getElementById("WordHintText");
+        this.FeedbackElement = document.getElementById("WordFeedback");
+        this.InputElement = document.getElementById("WordGuessInput");
+        this.SubmitButton = document.getElementById("SubmitWordGuessButton");
+        this.SkipButton = document.getElementById("SkipWordButton");
+        this.RestartButton = document.getElementById("RestartWordGameButton");
+
+        this.TimeLeft = 75;
+        this.Score = 0;
+        this.Round = 1;
+        this.CurrentWord = "";
+        this.GameTimerId = null;
+
+        this.SubmitButton.addEventListener("click", () => this.SubmitGuess());
+        this.SkipButton.addEventListener("click", () => this.SkipWord());
+        this.RestartButton.addEventListener("click", () => this.StartGame());
+        this.InputElement.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            this.SubmitGuess();
+          }
+        });
+
+        this.StartGame();
+      }
+
+      StartGame() {
+        this.TimeLeft = 75;
+        this.Score = 0;
+        this.Round = 1;
+        this.FeedbackElement.textContent = "";
+        this.UpdateHud();
+        this.NextWord();
+        this.InputElement.disabled = false;
+        this.SubmitButton.disabled = false;
+        this.SkipButton.disabled = false;
+
+        clearInterval(this.GameTimerId);
+        this.GameTimerId = setInterval(() => {
+          this.Tick();
+        }, 1000);
+      }
+
+      Tick() {
+        this.TimeLeft -= 1;
+        this.UpdateHud();
+        if (this.TimeLeft <= 0) {
+          this.EndGame();
+        }
+      }
+
+      EndGame() {
+        clearInterval(this.GameTimerId);
+        this.InputElement.disabled = true;
+        this.SubmitButton.disabled = true;
+        this.SkipButton.disabled = true;
+        this.FeedbackElement.innerHTML = `<span class="ResultBad">Time up! Final score: ${this.Score}</span>`;
+      }
+
+      NextWord() {
+        const selection = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)];
+        this.CurrentWord = selection.word;
+        const scrambledWord = this.ScrambleWord(selection.word);
+        this.WordElement.textContent = scrambledWord;
+        this.HintElement.textContent = `Hint: ${selection.hint}`;
+        this.RoundElement.textContent = `Round: ${this.Round}`;
+        this.InputElement.value = "";
+        this.InputElement.focus();
+      }
+
+      ScrambleWord(word) {
+        const letters = word.split("");
+        for (let index = letters.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [letters[index], letters[swapIndex]] = [letters[swapIndex], letters[index]];
+        }
+        const candidate = letters.join("");
+        return candidate === word ? letters.reverse().join("") : candidate;
+      }
+
+      SubmitGuess() {
+        if (this.TimeLeft <= 0) {
+          return;
+        }
+
+        const guess = this.InputElement.value.trim().toLowerCase();
+        if (!guess) {
+          this.FeedbackElement.innerHTML = `<span class="ResultBad">Please enter a guess.</span>`;
+          return;
+        }
+
+        if (guess === this.CurrentWord) {
+          this.Score += 5;
+          this.TimeLeft += 3;
+          this.Round += 1;
+          this.FeedbackElement.innerHTML = `<span class="ResultGood">Correct! +5 points and +3s.</span>`;
+          this.NextWord();
+        } else {
+          this.Score -= 1;
+          this.FeedbackElement.innerHTML = `<span class="ResultBad">Not quite. Try again!</span>`;
+        }
+        this.UpdateHud();
+      }
+
+      SkipWord() {
+        if (this.TimeLeft <= 0) {
+          return;
+        }
+        this.Score -= 2;
+        this.Round += 1;
+        this.FeedbackElement.innerHTML = `<span class="ResultBad">Skipped. The word was ${this.CurrentWord.toUpperCase()}.</span>`;
+        this.NextWord();
+        this.UpdateHud();
+      }
+
+      UpdateHud() {
+        this.TimerElement.textContent = `Time: ${Math.max(0, this.TimeLeft)}s`;
+        this.ScoreElement.textContent = `Score: ${this.Score}`;
+        this.RoundElement.textContent = `Round: ${this.Round}`;
+      }
+    }
+
+    class MathRushGame {
+      constructor() {
+        this.TimerElement = document.getElementById("MathTimer");
+        this.ScoreElement = document.getElementById("MathScore");
+        this.StreakElement = document.getElementById("MathStreak");
+        this.PromptElement = document.getElementById("MathPromptText");
+        this.InputElement = document.getElementById("MathAnswerInput");
+        this.SubmitButton = document.getElementById("MathSubmitButton");
+        this.StartButton = document.getElementById("MathStartButton");
+        this.FeedbackElement = document.getElementById("MathFeedback");
+
+        this.TimeLeft = 60;
+        this.Score = 0;
+        this.Streak = 0;
+        this.CurrentAnswer = null;
+        this.TimerId = null;
+
+        this.SubmitButton.addEventListener("click", () => this.SubmitAnswer());
+        this.StartButton.addEventListener("click", () => this.StartGame());
+        this.InputElement.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            this.SubmitAnswer();
+          }
+        });
+      }
+
+      StartGame() {
+        clearInterval(this.TimerId);
+        this.TimeLeft = 60;
+        this.Score = 0;
+        this.Streak = 0;
+        this.InputElement.disabled = false;
+        this.SubmitButton.disabled = false;
+        this.FeedbackElement.textContent = "";
+        this.CreateProblem();
+        this.UpdateHud();
+        this.InputElement.focus();
+
+        this.TimerId = setInterval(() => {
+          this.TimeLeft -= 1;
+          this.UpdateHud();
+          if (this.TimeLeft <= 0) {
+            this.EndGame();
+          }
+        }, 1000);
+      }
+
+      EndGame() {
+        clearInterval(this.TimerId);
+        this.InputElement.disabled = true;
+        this.SubmitButton.disabled = true;
+        this.PromptElement.textContent = "Time is up!";
+        this.FeedbackElement.innerHTML = `<span class="ResultBad">Final score: ${this.Score}. Press Start / Restart to play again.</span>`;
+      }
+
+      CreateProblem() {
+        const levelBoost = Math.floor(this.Streak / 4);
+        const minValue = 2 + levelBoost;
+        const maxValue = 12 + levelBoost * 2;
+        const operationPool = ["+", "-", "*", "/"];
+        const operation = operationPool[Math.floor(Math.random() * operationPool.length)];
+
+        let firstNumber = this.RandomInt(minValue, maxValue);
+        let secondNumber = this.RandomInt(minValue, maxValue);
+
+        if (operation === "-") {
+          if (secondNumber > firstNumber) {
+            [firstNumber, secondNumber] = [secondNumber, firstNumber];
+          }
+          this.CurrentAnswer = firstNumber - secondNumber;
+        } else if (operation === "*") {
+          this.CurrentAnswer = firstNumber * secondNumber;
+        } else if (operation === "/") {
+          this.CurrentAnswer = this.RandomInt(minValue, maxValue);
+          secondNumber = this.RandomInt(minValue, maxValue);
+          firstNumber = this.CurrentAnswer * secondNumber;
+        } else {
+          this.CurrentAnswer = firstNumber + secondNumber;
+        }
+
+        const visualOperator = operation === "*" ? "×" : operation === "/" ? "÷" : operation;
+        this.PromptElement.textContent = `${firstNumber} ${visualOperator} ${secondNumber} = ?`;
+        this.InputElement.value = "";
+      }
+
+      SubmitAnswer() {
+        if (this.TimeLeft <= 0 || this.CurrentAnswer === null) {
+          return;
+        }
+
+        const enteredValue = Number(this.InputElement.value.trim());
+        if (Number.isNaN(enteredValue)) {
+          this.FeedbackElement.innerHTML = `<span class="ResultBad">Enter a valid number.</span>`;
+          return;
+        }
+
+        if (enteredValue === this.CurrentAnswer) {
+          this.Streak += 1;
+          const bonusPoints = this.Streak % 5 === 0 ? 1 : 0;
+          this.Score += 2 + bonusPoints;
+          this.FeedbackElement.innerHTML = `<span class="ResultGood">Correct! +${2 + bonusPoints} points.</span>`;
+          this.CreateProblem();
+        } else {
+          this.Streak = 0;
+          this.FeedbackElement.innerHTML = `<span class="ResultBad">Wrong. Answer was ${this.CurrentAnswer}.</span>`;
+          this.CreateProblem();
+        }
+        this.UpdateHud();
+        this.InputElement.focus();
+      }
+
+      RandomInt(minValue, maxValue) {
+        return Math.floor(Math.random() * (maxValue - minValue + 1)) + minValue;
+      }
+
+      UpdateHud() {
+        this.TimerElement.textContent = `Time: ${Math.max(0, this.TimeLeft)}s`;
+        this.ScoreElement.textContent = `Score: ${this.Score}`;
+        this.StreakElement.textContent = `Streak: ${this.Streak}`;
+      }
+    }
+
+    class GameTabsController {
+      constructor() {
+        this.TabButtons = Array.from(document.querySelectorAll(".GameTabButton"));
+        this.Panels = Array.from(document.querySelectorAll(".GamePanel"));
+
+        this.TabButtons.forEach((button) => {
+          button.addEventListener("click", () => this.ShowPanel(button.dataset.panel));
+        });
+      }
+
+      ShowPanel(panelId) {
+        this.TabButtons.forEach((button) => {
+          button.classList.toggle("IsActive", button.dataset.panel === panelId);
+        });
+
+        this.Panels.forEach((panel) => {
+          panel.classList.toggle("IsVisible", panel.id === panelId);
+        });
+      }
+    }
+
+    new GameTabsController();
+    new TicTacToeGame();
+    new WordScrambleGame();
+    new MathRushGame();
+  </script>
+</body>
+</html>
